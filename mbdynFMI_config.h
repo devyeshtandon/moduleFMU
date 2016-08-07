@@ -10,4 +10,4 @@ int error(const char* test, int value);
 
 int sumde(int x, int y);
 
-char* UncompressLocation(const char* location);
+std::string UncompressLocation(const char* location);

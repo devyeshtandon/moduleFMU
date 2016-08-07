@@ -347,8 +347,8 @@ void fmu2::SetValuesByVariable(const std::string s, double value){
 
 void fmu2::Terminate(void){
 	fmi2_import_free_instance(fmu);
-        free(eventIndicators);
-        free(eventIndicatorsPrev);
+        delete[] eventIndicators;
+        delete[] eventIndicatorsPrev;
 }
 
 void fmu2::InitializeAsSlave(const char* location, double tstart, double tend){
@@ -410,8 +410,9 @@ void fmu1::ImportCreateDLL(int type){
 int fmu1::GetNumOfContinousStates(void){
 	numOfContStates = fmi1_import_get_number_of_continuous_states(fmu);
 	currStates      = new double [numOfContStates];
-	currStatesDer   = new double [numOfContStates];
-
+	currStatesDer   = new double [numOfContStates];	
+	vrs             = new fmi1_value_reference_t [numOfContStates];
+	deriv           = new fmi1_real_t [numOfContStates];
 	return numOfContStates;
 }
 
@@ -522,9 +523,10 @@ int fmu1::GetRefValueFromString(const char* s){
 }
 
 double* fmu1::GetStateDerivatives(){
-	fmi1_real_t *deriv;
-	deriv = new fmi1_real_t [numOfContStates];
+
+
 	fmi1_import_get_derivatives(fmu, deriv, numOfContStates);
+
 	return	deriv;
 }
 
@@ -535,7 +537,7 @@ void fmu1::SetTime(double time){
 }
 
 void fmu1::SetStates(double* states){
-	vrs = new fmi1_value_reference_t [numOfContStates];
+
 	fmistatus = fmi1_capi_get_state_value_references(fmu->capi, vrs, numOfContStates);
 	STATUSCHECK(fmistatus);
 	fmistatus = fmi1_import_set_real(fmu, vrs, numOfContStates, states);
@@ -588,8 +590,8 @@ void fmu1::CSPropogate(double tcur, double dt){
 void fmu1::Terminate(void){
 
         fmi1_import_free_model_instance(fmu);
-        free(eventIndicators);
-        free(eventIndicatorsPrev);
+        delete[] eventIndicators;
+        delete[] eventIndicatorsPrev;
 
 }
 

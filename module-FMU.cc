@@ -21,8 +21,8 @@ pDM(pDM)
 
         strcpy(FMUlocation, HP.GetStringWithDelims());
 	
-	const char* UClocation;
-	UClocation = (const char*) UncompressLocation(FMUlocation);
+	std::string UClocation;
+	UClocation = UncompressLocation(FMUlocation);
 
 	if(HP.IsKeyWord("type")){
 		simType = HP.GetString();
@@ -68,7 +68,7 @@ pDM(pDM)
 	setup_callbacks(&callbacks);
 
 /// Unzip the fmu
-        status = fmi_zip_unzip(FMUlocation, UClocation, &callbacks);
+        status = fmi_zip_unzip(FMUlocation, UClocation.c_str(), &callbacks);
 	
 	if(status==jm_status_error){
 		silent_cerr("Failed to uncompress FMU. Exiting\n");	
@@ -79,7 +79,7 @@ pDM(pDM)
 
 /// Get the version and context
         context = fmi_import_allocate_context(&callbacks);
-        version = fmi_import_get_fmi_version(context, FMUlocation, UClocation);
+        version = fmi_import_get_fmi_version(context, FMUlocation, UClocation.c_str());
 
 	if(version == 1){
 		model = new fmu1(context);
@@ -88,7 +88,7 @@ pDM(pDM)
 	}
 
 	silent_cout("Version"<<version);
-        model->parseXML(context, UClocation);
+        model->parseXML(context, UClocation.c_str());
         model->setCallBackFunction();
 	model->ImportCreateDLL(SIMTYPE);
 
@@ -107,14 +107,14 @@ pDM(pDM)
 
 	} else if (SIMTYPE == COSIM ) {
 
-		model->InitializeAsSlave(UClocation, initialTime, endTime);
+		model->InitializeAsSlave(UClocation.c_str(), initialTime, endTime);
 		silent_cout("Initialized as slave\n");
 		timeStep = pDM->GetSolver()->GetDInitialTimeStep();
 
 	}
 
-	currState = new double[numOfContinousStates];
-	directionalFlag = model->SupportsDirectionalDerivatives(SIMTYPE);
+	currState           = new double[numOfContinousStates];
+	directionalFlag     = model->SupportsDirectionalDerivatives(SIMTYPE);
 	jacobianInputVector = new int[drivesContainer.size()];
 	privDriveLength = 0;
 	int k = 0;
@@ -124,7 +124,7 @@ pDM(pDM)
 		if(!(model->CheckInput(i->first))){
 			silent_cout("Variable "<<i->first<<" is not of type input\n");
 			drivesContainer.erase(i->first);
-			i--;
+
 		} else {
 			if (dynamic_cast<const PrivDriveCaller*>(i->second) != NULL){
 				jacobianInputVector[privDriveLength] = model->GetRefValueFromString((i->first).c_str());
@@ -139,6 +139,14 @@ pDM(pDM)
 			break;
 		}
 	}
+	
+	if (directionalFlag){
+		jacobian = new double*[numOfContinousStates];
+		for (int i=0; i<numOfContinousStates; i++)
+			jacobian[i] = new double[numOfContinousStates + privDriveLength];
+
+		seedVector = new double[numOfContinousStates + privDriveLength];
+	}
 }
 
 ModuleFMU::~ModuleFMU(void)
@@ -147,6 +155,18 @@ ModuleFMU::~ModuleFMU(void)
 		model->Terminate();
 	else if (SIMTYPE == SIMTYPE)
 		model->TerminateSlave();
+
+	if(directionalFlag){
+		for(int i=0; i<numOfContinousStates; i++)
+			delete[] jacobian[i];
+		delete[] jacobian;
+		delete[] seedVector;
+	}
+
+	delete[] currState;
+	delete[] jacobianInputVector;
+
+	drivesContainer.clear();
 }
 
 
@@ -210,8 +230,7 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 		
 		if (directionalFlag){
 
-			double** jacobian;
-			double seedVector[numOfContinousStates + privDriveLength];
+
 			for (int i=0; i<numOfContinousStates; i++)
 				seedVector[i] = currState[i];
 			for (int i=0; i<privDriveLength; i++)
@@ -219,24 +238,21 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 
 			model->GetDirectionalDerivatives(jacobian, jacobianInputVector, privDriveLength, seedVector);
 			for (int i=0; i<numOfContinousStates; i++){
-				for(int j=0; j<numOfContinousStates + privDriveLength; j++){
-					if( i== j)	
-						WM.IncCoef(i,j, 1-dCoef*jacobian[i][j]);
+				WM.IncCoef(i,i, 1);
+				for(int j=0; j<numOfContinousStates; j++)
+					WM.IncCoef(i,j, -dCoef*jacobian[i][j]);
+				
+				for(int j=numOfContinousStates; j<numOfContinousStates + privDriveLength; j++){
+					if(privDrivesIndex[j-numOfContinousStates]->iGetSE()->
+						GetDofType(privDrivesIndex[i-numOfContinousStates]->iGetIndex()) 
+							== DofOrder::DIFFERENTIAL)
+						WM.IncCoef(i,j, -dCoef*jacobian[i][j]);
 					else
-						if (i>=numOfContinousStates){
-							if(privDrivesIndex[j-numOfContinousStates]->iGetSE()->
-								GetDofType(privDrivesIndex[i-numOfContinousStates]->iGetIndex()) 
-									== DofOrder::DIFFERENTIAL)
-								WM.IncCoef(i,j, -dCoef*jacobian[i][j]);
-							else
-								WM.IncCoef(i,j, -jacobian[i][j]);
-						}				
-						else
-							WM.IncCoef(i,j, -dCoef*jacobian[i][j]);
-				}	
+						WM.IncCoef(i,j, -jacobian[i][j]);
+				}
 			}
-			free(jacobian);
-			free(seedVector);
+
+			delete[] seedVector;
 
 		} else {
 			for(int i=1; i<=numOfContinousStates; i++)

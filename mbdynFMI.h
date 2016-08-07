@@ -74,6 +74,7 @@ class fmu1 :public fmu{
 	int numOfContStates;
 	fmi1_real_t* currStates;
 	fmi1_real_t* currStatesDer;
+	fmi1_real_t* deriv;
         fmi1_value_reference_t *vrs;
 
 	fmi1_boolean_t intermediateResults;

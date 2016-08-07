@@ -51,7 +51,9 @@ private:
 	bool* privDriveArray;
 	int privDriveLength;
 
-	bool directionalFlag;	
+	bool directionalFlag;
+	double **jacobian;
+	double *seedVector;	
 
 public:
         ModuleFMU(unsigned uLabel, const DofOwner *pDO,
