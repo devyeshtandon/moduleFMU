@@ -163,9 +163,10 @@ ModuleFMU::~ModuleFMU(void)
 		delete[] seedVector;
 	}
 
-	delete[] currState;
-	delete[] jacobianInputVector;
 
+	delete[] jacobianInputVector;
+	delete model;	
+	delete[] currState;
 	drivesContainer.clear();
 }
 
@@ -251,8 +252,6 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 						WM.IncCoef(i,j, -jacobian[i][j]);
 				}
 			}
-
-			delete[] seedVector;
 
 		} else {
 			for(int i=1; i<=numOfContinousStates; i++)

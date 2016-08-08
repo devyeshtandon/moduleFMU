@@ -51,6 +51,7 @@ class fmu {
 	virtual void CSPropogate(double tcur, double dt) = 0;
 	virtual void TerminateSlave(void) = 0;
 
+
 };
 
 class fmu1 :public fmu{
@@ -117,6 +118,8 @@ class fmu1 :public fmu{
 	void InitializeAsSlave(const char* location, double tstart, double tend);
 	void CSPropogate(double tcur, double dt);
 	void TerminateSlave(void);
+
+
 };
 
 class fmu2 : public fmu{

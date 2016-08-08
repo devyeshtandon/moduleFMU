@@ -206,17 +206,17 @@ void fmu2::GetDirectionalDerivatives(double** jacobian, int* inputStatesVRef, in
 		stateList[i] = inputStatesVRef[i-numOfContStates];
 	}
 
-	fmi2_real_t output[numOfContStates + inputLength];
-	
-	jacobian = new double*[numOfContStates];
+	fmi2_real_t output[numOfContStates + inputLength];	
 
 	for (int i=0; i<numOfContStates; i++){
 		fmistatus = fmi2_import_get_directional_derivative(fmu, stateList, numOfContStates + inputLength, &derList[i], 1, output , seedVector);
 		STATUSCHECK(fmistatus);
-		jacobian[i] = new double[numOfContStates + inputLength];
+
 		for (int j=0; j<numOfContStates + inputLength; j++)
 			jacobian[i][j] = output[j];
 	}
+	delete[] derList;
+	delete[] stateList;
 }
 
 
@@ -349,6 +349,11 @@ void fmu2::Terminate(void){
 	fmi2_import_free_instance(fmu);
         delete[] eventIndicators;
         delete[] eventIndicatorsPrev;
+	delete[] currStates;
+	delete[] currStatesDer;
+	
+	delete[] vrs;
+
 }
 
 void fmu2::InitializeAsSlave(const char* location, double tstart, double tend){
@@ -486,6 +491,8 @@ bool fmu1::CheckInput(const std::string s){
 	return ((fmi1_import_get_causality(v))==0);
 }
 
+
+
 void fmu1::SetValuesByVariable(const std::string s, double value){
 	fmi1_value_reference_t ref;
 	fmi1_variable_alias_kind_enu_t aliasKind;
@@ -592,6 +599,12 @@ void fmu1::Terminate(void){
         fmi1_import_free_model_instance(fmu);
         delete[] eventIndicators;
         delete[] eventIndicatorsPrev;
+	delete[] currStates;
+	delete[] currStatesDer;
+	delete[] deriv;
+	delete[] vrs;
+
+
 
 }
 
