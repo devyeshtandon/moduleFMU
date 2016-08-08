@@ -1,0 +1,50 @@
+
+module load: "libmodule-FMU";
+
+
+begin: data;
+	problem: initial value; # the default
+end: data;
+
+begin: initial value;
+	initial time: 0.;
+	final time: 1.;
+	time step: 1.e-2;
+
+	max iterations: 10;
+	tolerance: 1.e-6;
+
+	derivatives coefficient: 1.e-6;
+end: initial value;
+
+begin: control data;
+	structural nodes: 1;
+	rigid bodies: 1;
+	loadable elements: 1;
+#	forces: 1;
+end: control data;
+
+begin: nodes;
+	# in zero, with horizontal speed
+	structural: 1, dynamic, 50.0, 200.0, 12, eye, 0.,0.,0., null; 
+
+
+end: nodes;
+
+begin: elements;
+	body: 1, 1, 1., null, eye;
+
+
+    user defined: 99, FMU, "locationToFMU", 
+        type, cosimulation,
+	output, yes;
+
+#	   force: 1, absolute,
+#                1,
+#                position, null,
+#                0.,0.,1.,
+#                element, 99, loadable, string, "GRAVITY", direct;
+
+end: elements;
+
+
