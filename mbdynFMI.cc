@@ -349,7 +349,7 @@ void fmu2::Terminate(void){
 	fmi2_import_free_instance(fmu);
         delete[] eventIndicators;
         delete[] eventIndicatorsPrev;
-	delete[] currStates;
+//	delete[] currStates;
 	delete[] currStatesDer;
 	
 	delete[] vrs;
@@ -599,7 +599,7 @@ void fmu1::Terminate(void){
         fmi1_import_free_model_instance(fmu);
         delete[] eventIndicators;
         delete[] eventIndicatorsPrev;
-	delete[] currStates;
+//	delete[] currStates;
 	delete[] currStatesDer;
 	delete[] deriv;
 	delete[] vrs;
