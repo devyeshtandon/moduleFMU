@@ -1,3 +1,13 @@
+/*
+        AUTHOR: Devyesh Tandon <devyeshtandon+mbdyn@gmail.com>
+        Copyright (C) 2016(-2016) all rights reserved.
+        The copyright of this patch is transferred
+        to Pierangelo Masarati and Paolo Mantegazza
+        for use in the software MBDyn as described 
+        in the GNU Public License version 2.1
+
+*/
+
 #include "mbdynFMI.h"
 
 #define BUFFER 1000
