@@ -152,8 +152,9 @@ pDM(pDM)
 	
 	if (directionalFlag){
 		jacobian = new double*[numOfContinousStates];
-		for (int i=0; i<numOfContinousStates; i++)
+		for (int i=0; i<numOfContinousStates; i++){
 			jacobian[i] = new double[numOfContinousStates + privDriveLength];
+		}
 
 		seedVector = new double[numOfContinousStates + privDriveLength];
 	}
@@ -161,14 +162,17 @@ pDM(pDM)
 
 ModuleFMU::~ModuleFMU(void)
 {
-	if (SIMTYPE == IMPORT)
+	if (SIMTYPE == IMPORT){
 		model->Terminate();
-	else if (SIMTYPE == SIMTYPE)
+	}
+	else if (SIMTYPE == SIMTYPE){
 		model->TerminateSlave();
+	}
 
 	if(directionalFlag){
-		for(int i=0; i<numOfContinousStates; i++)
+		for(int i=0; i<numOfContinousStates; i++){
 			delete[] jacobian[i];
+		}
 		delete[] jacobian;
 		delete[] seedVector;
 	}
@@ -242,16 +246,20 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 		if (directionalFlag){
 
 
-			for (int i=0; i<numOfContinousStates; i++)
+			for (int i=0; i<numOfContinousStates; i++){
 				seedVector[i] = currState[i];
-			for (int i=0; i<privDriveLength; i++)
+			}
+
+			for (int i=0; i<privDriveLength; i++){
 				seedVector[i+numOfContinousStates] = privDrivesIndex[i]->dGet();
+			}
 
 			model->GetDirectionalDerivatives(jacobian, jacobianInputVector, privDriveLength, seedVector);
 			for (int i=0; i<numOfContinousStates; i++){
 				WM.IncCoef(i,i, 1);
-				for(int j=0; j<numOfContinousStates; j++)
+				for(int j=0; j<numOfContinousStates; j++){
 					WM.IncCoef(i,j, -dCoef*jacobian[i][j]);
+				}
 				
 				for(int j=numOfContinousStates; j<numOfContinousStates + privDriveLength; j++){
 					if(privDrivesIndex[j-numOfContinousStates]->iGetSE()->
@@ -264,8 +272,9 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 			}
 
 		} else {
-			for(int i=1; i<=numOfContinousStates; i++)
+			for(int i=1; i<=numOfContinousStates; i++){
 				WM.IncCoef(i , i, 1.);
+			}
 		}
 	}
 
@@ -311,8 +320,9 @@ ModuleFMU::AssRes(SubVectorHandler& WorkVec,
 		integer iFirstIndex = iGetFirstIndex();
 
 		//Set Index to WorkVec
-		for (int i=1; i<=numOfContinousStates; i++)
+		for (int i=1; i<=numOfContinousStates; i++){
 			WorkVec.PutRowIndex(i, iFirstIndex + i);
+		}
 
 		//Set WorkVec with the difference in the XPrimCurr - FMUDerivative
 		for (int i=1; i<=numOfContinousStates; i++){
@@ -392,10 +402,12 @@ ModuleFMU::Restart(std::ostream& out) const
 unsigned int 
 ModuleFMU::iGetNumDof(void) const
 {
-	if (SIMTYPE == IMPORT)
+	if (SIMTYPE == IMPORT){
 		return numOfContinousStates;
-	else if (SIMTYPE == COSIM)
+	}
+	else if (SIMTYPE == COSIM){
 		return 0;
+	}
 }
 
 DofOrder::Order

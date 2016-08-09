@@ -76,8 +76,9 @@ int annotation_start_handle(void *context, const char *parentName, void *parent,
 
 int annotation_data_handle(void* context, const char *s, int len) {
         int i;
-        for(i = 0; i < len; i++)
+        for(i = 0; i < len; i++){
                 printf("%c", s[i]);
+	}
         return 0;
 }
 
@@ -115,12 +116,15 @@ void fmu2::setCallBackFunction(){
 
 void fmu2::ImportCreateDLL(int type){
 
-	if(type == 1)
+	if(type == 1){
 		jmstatus = fmi2_import_create_dllfmu(fmu, fmi2_fmu_kind_me, &callBackFunctions);
-	else if (type == 0)
+	}
+	else if (type == 0){
 		jmstatus = fmi2_import_create_dllfmu(fmu, fmi2_fmu_kind_cs, &callBackFunctions);
-	else
+	}
+	else{
 		std::cout<<"Unknown Type";
+	}
 
 	STATUSCHECK(jmstatus);
 }
@@ -147,8 +151,9 @@ void fmu2::Initialize(double dTol, double time, double rTol){
 	jmstatus = fmi2_import_instantiate(fmu, "Test ME model instance",fmi2_model_exchange,0,0);
 	STATUSCHECK(jmstatus);
 
-	if (rTol ==0)
+	if (rTol ==0){
 		rTol = 0.001;
+	}
 
 	fmistatus = fmi2_import_setup_experiment(fmu, dTol, rTol, time, fmi2_false, 0.0);
 	STATUSCHECK(fmistatus);
@@ -221,8 +226,9 @@ void fmu2::GetDirectionalDerivatives(double** jacobian, int* inputStatesVRef, in
 		fmistatus = fmi2_import_get_directional_derivative(fmu, stateList, numOfContStates + inputLength, &derList[i], 1, output , seedVector);
 		STATUSCHECK(fmistatus);
 
-		for (int j=0; j<numOfContStates + inputLength; j++)
+		for (int j=0; j<numOfContStates + inputLength; j++){
 			jacobian[i][j] = output[j];
+		}
 	}
 	delete[] derList;
 	delete[] stateList;
@@ -335,18 +341,23 @@ void fmu2::SetValuesByVariable(const std::string s, double value){
         baseType = fmi2_import_get_variable_base_type(v);
 
         if (aliasKind == fmi2_variable_is_not_alias){
-                if(baseType != fmi2_base_type_bool)
+                if(baseType != fmi2_base_type_bool){
                         value = -value;
-                else
+		}
+                else{
                         value = (bool)!value;
+		}
         }
 
-        if (baseType == fmi2_base_type_real)
+        if (baseType == fmi2_base_type_real){
                 fmistatus = fmi2_import_set_real(fmu, &ref, 1, &value);
-        else if (baseType == fmi2_base_type_int)
+	}
+        else if (baseType == fmi2_base_type_int){
                 fmistatus = fmi2_import_set_integer(fmu, &ref, 1, (const int*)&value);
-        else if (baseType == fmi2_base_type_bool)
+	}
+        else if (baseType == fmi2_base_type_bool){
                 fmistatus = fmi2_import_set_boolean(fmu, &ref, 1, (const fmi2_boolean_t*)&value);
+	}
         else{
                 silent_cerr("Input type not Supported");
                 throw ErrGeneric(MBDYN_EXCEPT_ARGS);
@@ -516,18 +527,23 @@ void fmu1::SetValuesByVariable(const std::string s, double value){
 	baseType = fmi1_import_get_variable_base_type(v);
 
         if (aliasKind == fmi1_variable_is_negated_alias){
-		if(baseType != fmi1_base_type_bool)
+		if(baseType != fmi1_base_type_bool){
 			value = -value;
-		else
+		}
+		else {
 			value = (bool)!value; 
+		}
 	}
 
-	if (baseType == fmi1_base_type_real)
+	if (baseType == fmi1_base_type_real){
 		fmistatus = fmi1_import_set_real(fmu, &ref, 1, &value);
-	else if (baseType == fmi1_base_type_int)
+	}
+	else if (baseType == fmi1_base_type_int){
 		fmistatus = fmi1_import_set_integer(fmu, &ref, 1, (const int*)&value);
-	else if (baseType == fmi1_base_type_bool)
+	}
+	else if (baseType == fmi1_base_type_bool){
 		fmistatus = fmi1_import_set_boolean(fmu, &ref, 1, (const fmi1_boolean_t*)&value);
+	}
 	else{
 		silent_cerr("Input type not Supported");
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
