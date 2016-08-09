@@ -596,7 +596,9 @@ void fmu1::CSPropogate(double tcur, double dt){
 
 void fmu1::Terminate(void){
 
-        fmi1_import_free_model_instance(fmu);
+
+	fmi1_capi_free_dll(fmu->capi);
+
         delete[] eventIndicators;
         delete[] eventIndicatorsPrev;
 //	delete[] currStates;
@@ -604,6 +606,11 @@ void fmu1::Terminate(void){
 	delete[] deriv;
 	delete[] vrs;
 
+        fmi1_import_free_model_instance(fmu);
+	fmi1_import_destroy_dllfmu(fmu);
+	fmi1_import_free(fmu);
+
+	fmi_xml_free_context(context);
 
 
 }
