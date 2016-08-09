@@ -353,6 +353,8 @@ void fmu2::Terminate(void){
 	delete[] currStatesDer;
 	
 	delete[] vrs;
+	fmi2_import_free_instance(fmu);
+	fmi2_import_free(fmu);
 
 }
 
