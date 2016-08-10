@@ -132,8 +132,8 @@ void fmu2::ImportCreateDLL(int type){
 int fmu2::GetNumOfContinousStates(void){
 	numOfContStates = fmi2_import_get_number_of_continuous_states(fmu);
 
-	currStates	= new double[numOfContStates];
-        currStatesDer   = new double[numOfContStates];
+	
+//        currStatesDer   = new double[numOfContStates];
 	
 	return numOfContStates;
 }
@@ -188,7 +188,7 @@ bool fmu2::SupportsDirectionalDerivatives(int simType){
 	}
 
 	if (!capability){
-		silent_cout("This FMU does not support Directional Derivatives\n"<<capability<<"LOL\n");
+		silent_cout("This FMU does not support Directional Derivatives\n");
 		return false;
 	}  
 	
@@ -267,10 +267,12 @@ void fmu2::SetStates(double* states){
 
 }
 
-// Returns TRUE if it is of type input
 bool fmu2::CheckInput(const std::string s){
 	v = fmi2_import_get_variable_by_name(fmu, s.c_str());
-
+	if(v==NULL){
+		silent_cout(s.c_str()<<" is not defined in XML, hence ");
+		return false;
+	}
 	return ((fmi2_import_get_causality(v))==2);
 }
 
@@ -290,20 +292,29 @@ double fmu2::GetStateFromRefValue(unsigned int i){
 
 }
 
-double* fmu2::GetStateDerivatives(void){
-        fmi2_real_t *deriv;
-        deriv = new fmi2_real_t [numOfContStates];
-        fmi2_import_get_derivatives(fmu, deriv, numOfContStates);
-        return  deriv;
+fmu2::~fmu2(void){
+        delete[] eventIndicators;
+        delete[] eventIndicatorsPrev;
+
+	fmi_import_free_context(context);
+
+
 }
 
-double* fmu2::GetStates(void){
-        fmistatus = fmi2_import_get_continuous_states(fmu, currStates, numOfContStates);
+
+void fmu2::GetStateDerivatives(double* derivatives){
+    
+        fmistatus = fmi2_import_get_derivatives(fmu, derivatives, numOfContStates);
 	STATUSCHECK(fmistatus);
-        return currStates;
+
 }
 
-bool fmu2::CheckInterrupts(double currTime){
+void fmu2::GetStates(double* states){
+        fmistatus = fmi2_import_get_continuous_states(fmu, states, numOfContStates);
+	STATUSCHECK(fmistatus);
+}
+
+bool fmu2::CheckInterrupts(double currTime, double* states){
         int zeroCrossningEvent = 0;
 
         fmistatus = fmi2_import_get_event_indicators(fmu, eventIndicators, nEventIndicators);
@@ -319,7 +330,7 @@ bool fmu2::CheckInterrupts(double currTime){
 		fmistatus = fmi2_import_enter_event_mode(fmu);
 		do_event_iteration(fmu, &eventInfo);
 		fmistatus = fmi2_import_enter_continuous_time_mode(fmu);
-		fmistatus = fmi2_import_get_continuous_states(fmu, currStates, numOfContStates);
+		fmistatus = fmi2_import_get_continuous_states(fmu, states, numOfContStates);
 		fmistatus = fmi2_import_get_event_indicators(fmu, eventIndicatorsPrev, nEventIndicators);
 
 
@@ -367,12 +378,7 @@ void fmu2::SetValuesByVariable(const std::string s, double value){
 
 void fmu2::Terminate(void){
 	fmi2_import_free_instance(fmu);
-        delete[] eventIndicators;
-        delete[] eventIndicatorsPrev;
-//	delete[] currStates;
-	delete[] currStatesDer;
-	
-	delete[] vrs;
+
 	fmi2_import_free_instance(fmu);
 	fmi2_import_free(fmu);
 
@@ -410,6 +416,16 @@ void fmu2::TerminateSlave(void){
 
 }
 
+fmu::~fmu(void){
+	NO_OP;
+}
+
+fmu1::~fmu1(void){
+	silent_cout("This was called");
+	fmi_xml_free_context(context);
+}
+
+
 void fmu1::parseXML(fmi_import_context_t* context, const char* dirPath){
 	fmu = fmi1_import_parse_xml(context, dirPath);
         if (!fmu){
@@ -436,8 +452,8 @@ void fmu1::ImportCreateDLL(int type){
 
 int fmu1::GetNumOfContinousStates(void){
 	numOfContStates = fmi1_import_get_number_of_continuous_states(fmu);
-	currStates      = new double [numOfContStates];
-	currStatesDer   = new double [numOfContStates];	
+//	currStates      = new double [numOfContStates];
+//	currStatesDer   = new double [numOfContStates];	
 	vrs             = new fmi1_value_reference_t [numOfContStates];
 	deriv           = new fmi1_real_t [numOfContStates];
 	return numOfContStates;
@@ -486,7 +502,7 @@ int fmu1::GetNumOfEventIndicators(void){
 	return fmi1_import_get_number_of_event_indicators(fmu);
 }
 
-bool fmu1::CheckInterrupts(double currTime){
+bool fmu1::CheckInterrupts(double currTime, double* states){
 	int zeroCrossningEvent = 0;
 
 	fmistatus = fmi1_import_get_event_indicators(fmu, eventIndicators, nEventIndicators);
@@ -500,7 +516,7 @@ bool fmu1::CheckInterrupts(double currTime){
 
 	if ( zeroCrossningEvent || (eventInfo.upcomingTimeEvent && currTime == eventInfo.nextEventTime)) {
 		fmistatus = fmi1_import_eventUpdate(fmu, intermediateResults, &eventInfo);
-		fmistatus = fmi1_import_get_continuous_states(fmu, currStates, numOfContStates);
+		fmistatus = fmi1_import_get_continuous_states(fmu, states, numOfContStates);
 		fmistatus = fmi1_import_get_event_indicators(fmu, eventIndicatorsPrev, nEventIndicators);
 		return true;
 	} else {
@@ -510,6 +526,11 @@ bool fmu1::CheckInterrupts(double currTime){
 
 bool fmu1::CheckInput(const std::string s){
 	v = fmi1_import_get_variable_by_name(fmu, s.c_str());
+	if(v==NULL){
+		silent_cout(s.c_str()<<" is not defined in XML, hence ");
+		return false;
+	}
+
 	return ((fmi1_import_get_causality(v))==0);
 }
 
@@ -556,12 +577,10 @@ int fmu1::GetRefValueFromString(const char* s){
 	return	static_cast<int>(fmi1_import_get_variable_vr(v));
 }
 
-double* fmu1::GetStateDerivatives(){
+void fmu1::GetStateDerivatives(double* derivatives){
 
-
-	fmi1_import_get_derivatives(fmu, deriv, numOfContStates);
-
-	return	deriv;
+	fmistatus = fmi1_import_get_derivatives(fmu, derivatives, numOfContStates);
+	STATUSCHECK(fmistatus);
 }
 
 void fmu1::SetTime(double time){
@@ -629,7 +648,7 @@ void fmu1::Terminate(void){
         delete[] eventIndicators;
         delete[] eventIndicatorsPrev;
 //	delete[] currStates;
-	delete[] currStatesDer;
+
 	delete[] deriv;
 	delete[] vrs;
 
@@ -637,7 +656,7 @@ void fmu1::Terminate(void){
 	fmi1_import_destroy_dllfmu(fmu);
 	fmi1_import_free(fmu);
 
-	fmi_xml_free_context(context);
+
 
 
 }
@@ -650,16 +669,15 @@ void fmu1::TerminateSlave(void){
 
 }
 
-double* fmu1::GetStates(void){
+void fmu1::GetStates(double* states){
 
-	fmistatus = fmi1_import_get_continuous_states(fmu, currStates, numOfContStates);
+	fmistatus = fmi1_import_get_continuous_states(fmu, states, numOfContStates);
 	if(!fmistatus){	
-		fmistatus = fmi1_import_get_nominal_continuous_states(fmu, currStates, numOfContStates);
+		fmistatus = fmi1_import_get_nominal_continuous_states(fmu, states, numOfContStates);
 	}
 //Put all the values as zero if everything fails?
 	STATUSCHECK(fmistatus);
 	
-	return currStates;
 }
 
 void fmu1::InitializeAsSlave(const char* location, double tstart, double tend){

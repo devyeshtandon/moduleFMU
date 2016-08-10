@@ -124,6 +124,7 @@ pDM(pDM)
 	}
 
 	currState           = new double[numOfContinousStates];
+	stateDerivatives    = new double[numOfContinousStates];
 	directionalFlag     = model->SupportsDirectionalDerivatives(SIMTYPE);
 	jacobianInputVector = new int[drivesContainer.size()];
 	privDriveLength = 0;
@@ -152,9 +153,8 @@ pDM(pDM)
 	
 	if (directionalFlag){
 		jacobian = new double*[numOfContinousStates];
-		for (int i=0; i<numOfContinousStates; i++){
-			jacobian[i] = new double[numOfContinousStates + privDriveLength];
-		}
+		jacobian[0] = new double[(numOfContinousStates + privDriveLength)*numOfContinousStates];
+
 
 		seedVector = new double[numOfContinousStates + privDriveLength];
 	}
@@ -170,10 +170,10 @@ ModuleFMU::~ModuleFMU(void)
 	}
 
 	if(directionalFlag){
-		for(int i=0; i<numOfContinousStates; i++){
-			delete[] jacobian[i];
-		}
+
+		delete[] jacobian[0];
 		delete[] jacobian;
+
 		delete[] seedVector;
 	}
 
@@ -181,6 +181,12 @@ ModuleFMU::~ModuleFMU(void)
 	delete[] jacobianInputVector;
 	delete model;	
 	delete[] currState;
+	delete[] stateDerivatives;
+
+	for (strDriveCon::iterator i = drivesContainer.begin(); i != drivesContainer.end(); i++){
+		delete[] (i->second);
+	}
+
 	drivesContainer.clear();
 }
 
@@ -313,7 +319,7 @@ ModuleFMU::AssRes(SubVectorHandler& WorkVec,
 			model->SetStates(currState);	
 //			model->CheckInterrupts(currTime);
 			
-			stateDerivatives = model->GetStateDerivatives();
+			model->GetStateDerivatives(stateDerivatives);
 		}
 		
 		//Get Index of the elements
@@ -381,16 +387,16 @@ ModuleFMU::SetValue(DataManager *pDM,
 	VectorHandler& X, VectorHandler& XP,
 	SimulationEntity::Hints *ph)
 {
-	if(numOfContinousStates > 0){
-		if(SIMTYPE == IMPORT){
-			currState = model->GetStates();
-			stateDerivatives = model->GetStateDerivatives();
-			for (int i=0; i<numOfContinousStates; i++){
-				X(iGetFirstIndex() + i + 1) = currState[i];
-				XP(iGetFirstIndex() + i + 1) = stateDerivatives[i];
-			}
+	
+	if(SIMTYPE == IMPORT){
+		model->GetStates(currState);
+		model->GetStateDerivatives(stateDerivatives);
+		for (int i=0; i<numOfContinousStates; i++){
+			X(iGetFirstIndex() + i + 1) = currState[i];
+			XP(iGetFirstIndex() + i + 1) = stateDerivatives[i];
 		}
 	}
+
 }
 
 std::ostream&

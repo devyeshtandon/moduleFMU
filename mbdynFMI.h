@@ -50,19 +50,19 @@ class fmu {
 
 	virtual int GetRefValueFromString(const char* s) = 0;
 	virtual double GetStateFromRefValue(unsigned int i) = 0;
-	virtual double* GetStateDerivatives(void) = 0;
-	virtual double* GetStates(void) = 0;
+	virtual void GetStateDerivatives(double*) = 0;
+	virtual void GetStates(double*) = 0;
 	virtual void GetDirectionalDerivatives(double** ,int*, int, double *) = 0;
 	virtual bool SupportsDirectionalDerivatives(int) = 0;
 
-	virtual bool CheckInterrupts(double currTime) = 0;
+	virtual bool CheckInterrupts(double, double*) = 0;
 	virtual void Terminate(void) = 0;
 
 	virtual void InitializeAsSlave(const char*, double, double) = 0;
 	virtual void CSPropogate(double tcur, double dt) = 0;
 	virtual void TerminateSlave(void) = 0;
 
-
+	virtual ~fmu(void);
 };
 
 class fmu1 :public fmu{
@@ -92,6 +92,7 @@ class fmu1 :public fmu{
 	fmi1_boolean_t intermediateResults;
 	fmi1_import_variable_list_t* vl;
 
+	int type; //1: IMPORT 2:COSIM
     public:
         void parseXML(fmi_import_context_t* context, const char* dirPath);
         void setCallBackFunction();
@@ -118,18 +119,19 @@ class fmu1 :public fmu{
 
 	int GetRefValueFromString(const char* s);
 	double GetStateFromRefValue(unsigned int i);
-	double* GetStateDerivatives(void);
-	double* GetStates(void);
+	void GetStateDerivatives(double*);
+	void GetStates(double *);
 	void GetDirectionalDerivatives(double** , int*, int, double*);
 	bool SupportsDirectionalDerivatives(int);
 
-	bool CheckInterrupts(double currTime);
+	bool CheckInterrupts(double, double*);
 	void Terminate(void);
 
 	void InitializeAsSlave(const char* location, double tstart, double tend);
 	void CSPropogate(double tcur, double dt);
 	void TerminateSlave(void);
 
+	virtual ~fmu1(void);
 
 };
 
@@ -161,8 +163,9 @@ class fmu2 : public fmu{
 	fmi2_boolean_t intermediateResults;
 	fmi2_import_variable_list_t* vl;
 
-	void FMI2STATUSCHECK(std::string fcn);
+	
 
+	int type; //1: IMPORT 2:COSIM
     public:
         void parseXML(fmi_import_context_t* context, const char* dirPath);
         void setCallBackFunction();
@@ -189,17 +192,18 @@ class fmu2 : public fmu{
 
 	int GetRefValueFromString(const char* s);
 	double GetStateFromRefValue(unsigned int i);
-	double* GetStateDerivatives(void);
-	double* GetStates(void);
+	void GetStateDerivatives(double*);
+	void GetStates(double *);
 	void GetDirectionalDerivatives(double** , int*, int, double*);
 	bool SupportsDirectionalDerivatives(int);
 
-	bool CheckInterrupts(double currTime);
+	bool CheckInterrupts(double, double*);
 	void Terminate(void);
 
 	void InitializeAsSlave(const char* , double, double);
 	void CSPropogate(double tcur, double dt);
 	void TerminateSlave(void);
 
+	virtual ~fmu2(void);
 };
 
