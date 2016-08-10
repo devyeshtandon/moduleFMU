@@ -131,9 +131,6 @@ void fmu2::ImportCreateDLL(int type){
 
 int fmu2::GetNumOfContinousStates(void){
 	numOfContStates = fmi2_import_get_number_of_continuous_states(fmu);
-
-	
-//        currStatesDer   = new double[numOfContStates];
 	
 	return numOfContStates;
 }
@@ -393,7 +390,7 @@ void fmu2::InitializeAsSlave(const char* location, double tstart, double tend){
 	jmstatus = fmi2_import_instantiate(fmu, "Model for CS", fmi2_cosimulation, resourceLocation.str().c_str(), visible);
 	STATUSCHECK(jmstatus);
 
-	fmistatus = fmi2_import_setup_experiment(fmu, fmi2_true, relativeTolerance, tstart, fmi2_false, tend);
+	fmistatus = fmi2_import_setup_experiment(fmu, fmi2_true, relativeTolerance, tstart, fmi2_true, tend);
 	STATUSCHECK(fmistatus);
 
         fmistatus = fmi2_import_enter_initialization_mode(fmu);
@@ -421,7 +418,7 @@ fmu::~fmu(void){
 }
 
 fmu1::~fmu1(void){
-	silent_cout("This was called");
+
 	fmi_xml_free_context(context);
 }
 
