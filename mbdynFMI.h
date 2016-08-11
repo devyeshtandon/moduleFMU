@@ -24,6 +24,10 @@
 #include <FMI2/fmi2_import.h>
 #include <FMI/fmi_import_context.h>
 
+#include "mbconfig.h"
+#include "stepsol.h"
+ 
+
 //#include <fmi1_import_impl.h>
 //#include <fmi1_import_variable_list_impl.h>
 
@@ -32,7 +36,7 @@ class fmu {
         virtual void parseXML(fmi_import_context_t* context, const char* dirPath) = 0;
         virtual void setCallBackFunction() = 0;
 
-	virtual void ImportCreateDLL(int) = 0;
+	virtual void ImportCreateDLL(void) = 0;
 
 	virtual bool CheckInput(const std::string) = 0;
 
@@ -52,15 +56,14 @@ class fmu {
 	virtual double GetStateFromRefValue(unsigned int i) = 0;
 	virtual void GetStateDerivatives(double*) = 0;
 	virtual void GetStates(double*) = 0;
-	virtual void GetDirectionalDerivatives(double** ,int*, int, double *) = 0;
-	virtual bool SupportsDirectionalDerivatives(int) = 0;
+	virtual void GetDirectionalDerivatives(FullMatrixHandler ,int*, int, double *) = 0;
+	virtual bool SupportsDirectionalDerivatives() = 0;
 
 	virtual bool CheckInterrupts(double, double*) = 0;
-	virtual void Terminate(void) = 0;
 
 	virtual void InitializeAsSlave(const char*, double, double) = 0;
 	virtual void CSPropogate(double tcur, double dt) = 0;
-	virtual void TerminateSlave(void) = 0;
+
 
 	virtual ~fmu(void);
 };
@@ -84,24 +87,23 @@ class fmu1 :public fmu{
 	fmi1_import_variable_t* v;
 
 	int numOfContStates;
-	fmi1_real_t* currStates;
-	fmi1_real_t* currStatesDer;
 	fmi1_real_t* deriv;
         fmi1_value_reference_t *vrs;
 
 	fmi1_boolean_t intermediateResults;
 	fmi1_import_variable_list_t* vl;
 
-	int type; //1: IMPORT 2:COSIM
+	int simType; //1: IMPORT 2:COSIM
     public:
         void parseXML(fmi_import_context_t* context, const char* dirPath);
         void setCallBackFunction();
 
-	fmu1(fmi_import_context_t* text){
-		context= text;
+	fmu1(fmi_import_context_t* text, int type){
+		context = text;
+		simType    = type;
 	}
 
-	void ImportCreateDLL(int);
+	void ImportCreateDLL(void);
 
 	bool CheckInput(const std::string);
 
@@ -121,15 +123,13 @@ class fmu1 :public fmu{
 	double GetStateFromRefValue(unsigned int i);
 	void GetStateDerivatives(double*);
 	void GetStates(double *);
-	void GetDirectionalDerivatives(double** , int*, int, double*);
-	bool SupportsDirectionalDerivatives(int);
+	void GetDirectionalDerivatives(FullMatrixHandler, int*, int, double*);
+	bool SupportsDirectionalDerivatives();
 
 	bool CheckInterrupts(double, double*);
-	void Terminate(void);
 
 	void InitializeAsSlave(const char* location, double tstart, double tend);
 	void CSPropogate(double tcur, double dt);
-	void TerminateSlave(void);
 
 	virtual ~fmu1(void);
 
@@ -156,25 +156,23 @@ class fmu2 : public fmu{
 	fmi2_boolean_t terminateSimulation;
 
 	int numOfContStates;
-	fmi2_real_t* currStates;
-	fmi2_real_t* currStatesDer;
         fmi2_value_reference_t *vrs;
 
 	fmi2_boolean_t intermediateResults;
 	fmi2_import_variable_list_t* vl;
 
-	
+	int simType; //1: IMPORT 2:COSIM
 
-	int type; //1: IMPORT 2:COSIM
     public:
         void parseXML(fmi_import_context_t* context, const char* dirPath);
         void setCallBackFunction();
 
-	fmu2(fmi_import_context_t* text){
+	fmu2(fmi_import_context_t* text, int type){
 		context= text;
+		simType = type;
 	}
 
-	void ImportCreateDLL(int);
+	void ImportCreateDLL(void);
 
 	bool CheckInput(const std::string);
 
@@ -194,15 +192,13 @@ class fmu2 : public fmu{
 	double GetStateFromRefValue(unsigned int i);
 	void GetStateDerivatives(double*);
 	void GetStates(double *);
-	void GetDirectionalDerivatives(double** , int*, int, double*);
-	bool SupportsDirectionalDerivatives(int);
+	void GetDirectionalDerivatives(FullMatrixHandler , int*, int, double*);
+	bool SupportsDirectionalDerivatives();
 
 	bool CheckInterrupts(double, double*);
-	void Terminate(void);
 
 	void InitializeAsSlave(const char* , double, double);
 	void CSPropogate(double tcur, double dt);
-	void TerminateSlave(void);
 
 	virtual ~fmu2(void);
 };

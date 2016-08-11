@@ -39,12 +39,7 @@ private:
         jm_callbacks callbacks;
         jm_status_enu_t status;
 
-	enum SimulationTypes{
-		COSIM,
-		IMPORT
-	} SIMTYPE;
-
-
+	
         typedef std::map<std::string, const DriveCaller *> strDriveCon;
         typedef std::map<int, const PrivDriveCaller*> intDriveCon;
         strDriveCon drivesContainer;
@@ -61,8 +56,7 @@ private:
 	bool* privDriveArray;
 	int privDriveLength;
 
-	bool directionalFlag;
-	double **jacobian;
+	bool directionalFlag;	
 	double *seedVector;	
 
 public:
@@ -102,5 +96,11 @@ public:
 	DofOrder::Order GetDofType(unsigned int i) const;
 	DofOrder::Order GetEqType(unsigned int i) const;
 
+	enum SimulationTypes{
+		COSIM,
+		IMPORT
+	} SIMTYPE;
+
+	FullMatrixHandler Jacobian;
 };
 

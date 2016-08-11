@@ -114,12 +114,12 @@ void fmu2::setCallBackFunction(){
 	callBackFunctions.componentEnvironment = 0;
 }
 
-void fmu2::ImportCreateDLL(int type){
+void fmu2::ImportCreateDLL(){
 
-	if(type == 1){
+	if(simType == 1){
 		jmstatus = fmi2_import_create_dllfmu(fmu, fmi2_fmu_kind_me, &callBackFunctions);
 	}
-	else if (type == 0){
+	else if (simType == 0){
 		jmstatus = fmi2_import_create_dllfmu(fmu, fmi2_fmu_kind_cs, &callBackFunctions);
 	}
 	else{
@@ -173,7 +173,7 @@ void fmu2::Initialize(double dTol, double time, double rTol){
 
 }
 
-bool fmu2::SupportsDirectionalDerivatives(int simType){
+bool fmu2::SupportsDirectionalDerivatives(){
 	unsigned int capability;
 
 	if(simType == 0){
@@ -195,7 +195,7 @@ bool fmu2::SupportsDirectionalDerivatives(int simType){
 
 }
 
-void fmu2::GetDirectionalDerivatives(double** jacobian, int* inputStatesVRef, int inputLength, double* seedVector){
+void fmu2::GetDirectionalDerivatives(FullMatrixHandler jacobian, int* inputStatesVRef, int inputLength, double* seedVector){
 //Seed Vector (the state value)
 
 	fmi2_import_variable_list_t* derivativeList = fmi2_import_get_derivatives_list(fmu);
@@ -224,7 +224,7 @@ void fmu2::GetDirectionalDerivatives(double** jacobian, int* inputStatesVRef, in
 		STATUSCHECK(fmistatus);
 
 		for (int j=0; j<numOfContStates + inputLength; j++){
-			jacobian[i][j] = output[j];
+			jacobian.PutCoef(i,j,output[j]);
 		}
 	}
 	delete[] derList;
@@ -295,6 +295,18 @@ fmu2::~fmu2(void){
 
 	fmi_import_free_context(context);
 
+	if (simType ==1 ){
+
+		fmi2_import_free_instance(fmu);
+		fmi2_import_free(fmu);
+
+	} else {
+
+		fmistatus = fmi2_import_terminate(fmu);
+		STATUSCHECK(fmistatus);
+		fmi2_import_free_instance(fmu);
+
+	}
 
 }
 
@@ -373,15 +385,9 @@ void fmu2::SetValuesByVariable(const std::string s, double value){
         STATUSCHECK(fmistatus);
 }
 
-void fmu2::Terminate(void){
-	fmi2_import_free_instance(fmu);
-
-	fmi2_import_free_instance(fmu);
-	fmi2_import_free(fmu);
-
-}
 
 void fmu2::InitializeAsSlave(const char* location, double tstart, double tend){
+
 	std::stringstream resourceLocation;
 	std::string strLocation = location;
 
@@ -390,7 +396,12 @@ void fmu2::InitializeAsSlave(const char* location, double tstart, double tend){
 	jmstatus = fmi2_import_instantiate(fmu, "Model for CS", fmi2_cosimulation, resourceLocation.str().c_str(), visible);
 	STATUSCHECK(jmstatus);
 
-	fmistatus = fmi2_import_setup_experiment(fmu, fmi2_true, relativeTolerance, tstart, fmi2_true, tend);
+	if (tend == std::numeric_limits<double>::max()){
+		fmistatus = fmi2_import_setup_experiment(fmu, fmi2_true, relativeTolerance, tstart, fmi2_false, 0);
+	} else {
+		fmistatus = fmi2_import_setup_experiment(fmu, fmi2_true, relativeTolerance, tstart, fmi2_true, tend);
+	}
+
 	STATUSCHECK(fmistatus);
 
         fmistatus = fmi2_import_enter_initialization_mode(fmu);
@@ -406,20 +417,36 @@ void fmu2::CSPropogate(double tcur, double dt){
 	STATUSCHECK(fmistatus);
 }
 
-void fmu2::TerminateSlave(void){
-	fmistatus = fmi2_import_terminate(fmu);
-	STATUSCHECK(fmistatus);
-        fmi2_import_free_instance(fmu);
-
-}
 
 fmu::~fmu(void){
 	NO_OP;
 }
 
 fmu1::~fmu1(void){
-
 	fmi_xml_free_context(context);
+
+	if(simType == 1){
+
+		fmi1_capi_free_dll(fmu->capi);
+
+		delete[] eventIndicators;
+		delete[] eventIndicatorsPrev;
+		//	delete[] currStates;
+
+		delete[] deriv;
+		delete[] vrs;
+
+		fmi1_import_free_model_instance(fmu);
+		fmi1_import_destroy_dllfmu(fmu);
+		fmi1_import_free(fmu);
+
+	} else {
+
+		fmistatus = fmi1_import_terminate_slave(fmu);
+		STATUSCHECK(fmistatus);
+		fmi1_import_free_slave_instance(fmu);
+
+	}
 }
 
 
@@ -440,7 +467,7 @@ void fmu1::setCallBackFunction(){
 	silent_cout("Callback Functions Set.\n");
 }
 
-void fmu1::ImportCreateDLL(int type){
+void fmu1::ImportCreateDLL(void){
 	jmstatus = fmi1_import_create_dllfmu(fmu, callBackFunctions, 1);
 	STATUSCHECK(jmstatus);
 	
@@ -604,11 +631,11 @@ double fmu1::GetStateFromRefValue(unsigned int i){
 	return realValue[0];
 } 
 
-bool fmu1::SupportsDirectionalDerivatives(int simType){
+bool fmu1::SupportsDirectionalDerivatives(){
 	return false;
 }
 
-void fmu1::GetDirectionalDerivatives(double** jacobian, int* vector, int vectorLength, double* seedVector){
+void fmu1::GetDirectionalDerivatives(FullMatrixHandler jacobian, int* vector, int vectorLength, double* seedVector){
 	NO_OP;
 }
 
@@ -636,35 +663,6 @@ void fmu1::CSPropogate(double tcur, double dt){
 	STATUSCHECK(fmistatus);
 }
 
-
-void fmu1::Terminate(void){
-
-
-	fmi1_capi_free_dll(fmu->capi);
-
-        delete[] eventIndicators;
-        delete[] eventIndicatorsPrev;
-//	delete[] currStates;
-
-	delete[] deriv;
-	delete[] vrs;
-
-        fmi1_import_free_model_instance(fmu);
-	fmi1_import_destroy_dllfmu(fmu);
-	fmi1_import_free(fmu);
-
-
-
-
-}
-
-void fmu1::TerminateSlave(void){
-
-        fmistatus = fmi1_import_terminate_slave(fmu);
-	STATUSCHECK(fmistatus);
-        fmi1_import_free_slave_instance(fmu);
-
-}
 
 void fmu1::GetStates(double* states){
 
