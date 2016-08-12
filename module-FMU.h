@@ -38,7 +38,6 @@ private:
 
         jm_callbacks callbacks;
         jm_status_enu_t status;
-
 	
         typedef std::map<std::string, const DriveCaller *> strDriveCon;
         typedef std::map<int, const PrivDriveCaller*> intDriveCon;
@@ -101,6 +100,6 @@ public:
 		IMPORT
 	} SIMTYPE;
 
-	FullMatrixHandler Jacobian;
+	FullMatrixHandler jacobian;
 };
 

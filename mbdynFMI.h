@@ -33,6 +33,19 @@
 
 class fmu {
     public:
+        enum SimulationTypes{
+                COSIM,
+                IMPORT
+        };	
+
+	int simType; 
+	fmi_import_context_t* context;
+
+	fmu(fmi_import_context_t* text, int type){
+		context = text;
+		simType = type;
+	}
+
         virtual void parseXML(fmi_import_context_t* context, const char* dirPath) = 0;
         virtual void setCallBackFunction() = 0;
 
@@ -56,7 +69,7 @@ class fmu {
 	virtual double GetStateFromRefValue(unsigned int i) = 0;
 	virtual void GetStateDerivatives(double*) = 0;
 	virtual void GetStates(double*) = 0;
-	virtual void GetDirectionalDerivatives(FullMatrixHandler ,int*, int, double *) = 0;
+	virtual void GetDirectionalDerivatives(FullMatrixHandler *,int*, int, double *) = 0;
 	virtual bool SupportsDirectionalDerivatives() = 0;
 
 	virtual bool CheckInterrupts(double, double*) = 0;
@@ -74,8 +87,7 @@ class fmu1 :public fmu{
         fmi1_import_t* fmu;
 
 	fmi1_status_t fmistatus;	
-	jm_status_enu_t jmstatus;
-	fmi_import_context_t* context;
+	jm_status_enu_t jmstatus;	
 
 	fmi1_real_t currTime;
 	fmi1_real_t relativeTolerance;
@@ -93,14 +105,12 @@ class fmu1 :public fmu{
 	fmi1_boolean_t intermediateResults;
 	fmi1_import_variable_list_t* vl;
 
-	int simType; //1: IMPORT 2:COSIM
     public:
         void parseXML(fmi_import_context_t* context, const char* dirPath);
         void setCallBackFunction();
 
-	fmu1(fmi_import_context_t* text, int type){
-		context = text;
-		simType    = type;
+	fmu1(fmi_import_context_t* text, int type):fmu::fmu(text, type){
+		NO_OP;
 	}
 
 	void ImportCreateDLL(void);
@@ -123,7 +133,7 @@ class fmu1 :public fmu{
 	double GetStateFromRefValue(unsigned int i);
 	void GetStateDerivatives(double*);
 	void GetStates(double *);
-	void GetDirectionalDerivatives(FullMatrixHandler, int*, int, double*);
+	void GetDirectionalDerivatives(FullMatrixHandler *, int*, int, double*);
 	bool SupportsDirectionalDerivatives();
 
 	bool CheckInterrupts(double, double*);
@@ -142,7 +152,7 @@ class fmu2 : public fmu{
 
 	fmi2_status_t fmistatus;	
 	jm_status_enu_t jmstatus;
-	fmi_import_context_t* context;
+
 
 	fmi2_real_t currTime;
 	fmi2_real_t relativeTolerance;
@@ -161,15 +171,12 @@ class fmu2 : public fmu{
 	fmi2_boolean_t intermediateResults;
 	fmi2_import_variable_list_t* vl;
 
-	int simType; //1: IMPORT 2:COSIM
-
     public:
         void parseXML(fmi_import_context_t* context, const char* dirPath);
         void setCallBackFunction();
 
-	fmu2(fmi_import_context_t* text, int type){
-		context= text;
-		simType = type;
+	fmu2(fmi_import_context_t* text, int type):fmu::fmu(text, type){
+		NO_OP;
 	}
 
 	void ImportCreateDLL(void);
@@ -192,7 +199,7 @@ class fmu2 : public fmu{
 	double GetStateFromRefValue(unsigned int i);
 	void GetStateDerivatives(double*);
 	void GetStates(double *);
-	void GetDirectionalDerivatives(FullMatrixHandler , int*, int, double*);
+	void GetDirectionalDerivatives(FullMatrixHandler *, int*, int, double*);
 	bool SupportsDirectionalDerivatives();
 
 	bool CheckInterrupts(double, double*);

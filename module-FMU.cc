@@ -119,7 +119,7 @@ pDM(pDM)
 
 		model->InitializeAsSlave(UClocation.c_str(), initialTime, endTime);
 		silent_cout("Initialized as slave\n");
-		timeStep = pDM->GetSolver()->GetDInitialTimeStep();
+		timeStep = pDM->GetSolver()->dGetInitialTimeStep();
 
 	}
 
@@ -155,9 +155,8 @@ pDM(pDM)
 		seedVector = new double[numOfContinousStates + privDriveLength];
 	}
 
-	Jacobian.Resize(numOfContinousStates,numOfContinousStates + privDriveLength);
-	Jacobian.Reset();
-
+	jacobian.Resize(numOfContinousStates,numOfContinousStates + privDriveLength);
+	jacobian.Reset();
 }
 
 ModuleFMU::~ModuleFMU(void)
@@ -237,7 +236,7 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 			}
 
 			for (int j = 0; j <privDriveLength; j++){
-				WM.PutColIndex(i, privDrivesIndex[j]->iGetIndex());
+				WM.PutColIndex(i, privDrivesIndex[j]->iGetIndex()+1);
 				i++;
 			}
 		}
@@ -253,26 +252,26 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 				seedVector[i+numOfContinousStates] = privDrivesIndex[i]->dGet();
 			}
 
-			model->GetDirectionalDerivatives(Jacobian, jacobianInputVector, privDriveLength, seedVector);
-			for (int i=0; i<numOfContinousStates; i++){
-				WM.IncCoef(i,i, 1);
-				for(int j=0; j<numOfContinousStates; j++){
-					WM.IncCoef(i,j, -dCoef*Jacobian.dGetCoef(i,j));
+			model->GetDirectionalDerivatives(&jacobian, jacobianInputVector, privDriveLength, seedVector);
+			for (int i=1; i<=numOfContinousStates; i++){
+				WM.IncCoef(i, i, 1);
+				for(int j=1; j<=numOfContinousStates; j++){
+					WM.IncCoef(i, j, -dCoef*jacobian.dGetCoef(i, j));
 				}
 				
-				for(int j=numOfContinousStates; j<numOfContinousStates + privDriveLength; j++){
+				for(int j=numOfContinousStates+1; j<=numOfContinousStates + privDriveLength; j++){
 					if(privDrivesIndex[j-numOfContinousStates]->iGetSE()->
-						GetDofType(privDrivesIndex[i-numOfContinousStates]->iGetIndex()) 
+						GetDofType(privDrivesIndex[i-numOfContinousStates]->iGetIndex()+1) 
 							== DofOrder::DIFFERENTIAL)
-						WM.IncCoef(i,j, -dCoef*Jacobian.dGetCoef(i,j));
+						WM.IncCoef(i, j, -dCoef*jacobian.dGetCoef(i, j));
 					else
-						WM.IncCoef(i,j, -Jacobian.dGetCoef(i,j));
+						WM.IncCoef(i, j, -jacobian.dGetCoef(i, j));
 				}
 			}
 
 		} else {
 			for(int i=1; i<=numOfContinousStates; i++){
-				WM.IncCoef(i , i, 1.);
+				WM.IncCoef(i, i, 1.);
 			}
 		}
 	}
@@ -316,7 +315,7 @@ ModuleFMU::AssRes(SubVectorHandler& WorkVec,
 		}
 		
 		//Get Index of the elements
-		integer iFirstIndex = iGetFirstIndex();
+		integer iFirstIndex = iGetFirstIndex() + 1;
 
 		//Set Index to WorkVec
 		for (int i=1; i<=numOfContinousStates; i++){

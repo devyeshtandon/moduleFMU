@@ -116,10 +116,10 @@ void fmu2::setCallBackFunction(){
 
 void fmu2::ImportCreateDLL(){
 
-	if(simType == 1){
+	if(simType == IMPORT){
 		jmstatus = fmi2_import_create_dllfmu(fmu, fmi2_fmu_kind_me, &callBackFunctions);
 	}
-	else if (simType == 0){
+	else if (simType == COSIM){
 		jmstatus = fmi2_import_create_dllfmu(fmu, fmi2_fmu_kind_cs, &callBackFunctions);
 	}
 	else{
@@ -176,10 +176,10 @@ void fmu2::Initialize(double dTol, double time, double rTol){
 bool fmu2::SupportsDirectionalDerivatives(){
 	unsigned int capability;
 
-	if(simType == 0){
+	if(simType == COSIM){
 		fmi2_capabilities_enu_t id = fmi2_cs_providesDirectionalDerivatives;
 		capability = fmi2_xml_get_capability(fmu->md, id);
-	} else if (simType == 1){
+	} else if (simType == IMPORT){
 		fmi2_capabilities_enu_t id = fmi2_me_providesDirectionalDerivatives;
 		capability = fmi2_xml_get_capability(fmu->md, id);
 	}
@@ -195,7 +195,7 @@ bool fmu2::SupportsDirectionalDerivatives(){
 
 }
 
-void fmu2::GetDirectionalDerivatives(FullMatrixHandler jacobian, int* inputStatesVRef, int inputLength, double* seedVector){
+void fmu2::GetDirectionalDerivatives(FullMatrixHandler* jacobian, int* inputStatesVRef, int inputLength, double* seedVector){
 //Seed Vector (the state value)
 
 	fmi2_import_variable_list_t* derivativeList = fmi2_import_get_derivatives_list(fmu);
@@ -224,7 +224,7 @@ void fmu2::GetDirectionalDerivatives(FullMatrixHandler jacobian, int* inputState
 		STATUSCHECK(fmistatus);
 
 		for (int j=0; j<numOfContStates + inputLength; j++){
-			jacobian.PutCoef(i,j,output[j]);
+			jacobian->PutCoef(i+1, j+1, output[j]);
 		}
 	}
 	delete[] derList;
@@ -290,12 +290,12 @@ double fmu2::GetStateFromRefValue(unsigned int i){
 }
 
 fmu2::~fmu2(void){
-        delete[] eventIndicators;
-        delete[] eventIndicatorsPrev;
+//        delete[] eventIndicators;
+//        delete[] eventIndicatorsPrev;
 
 	fmi_import_free_context(context);
 
-	if (simType ==1 ){
+	if (simType == IMPORT ){
 
 		fmi2_import_free_instance(fmu);
 		fmi2_import_free(fmu);
@@ -425,7 +425,7 @@ fmu::~fmu(void){
 fmu1::~fmu1(void){
 	fmi_xml_free_context(context);
 
-	if(simType == 1){
+	if(simType == IMPORT){
 
 		fmi1_capi_free_dll(fmu->capi);
 
@@ -635,7 +635,7 @@ bool fmu1::SupportsDirectionalDerivatives(){
 	return false;
 }
 
-void fmu1::GetDirectionalDerivatives(FullMatrixHandler jacobian, int* vector, int vectorLength, double* seedVector){
+void fmu1::GetDirectionalDerivatives(FullMatrixHandler* jacobian, int* vector, int vectorLength, double* seedVector){
 	NO_OP;
 }
 
