@@ -8,6 +8,7 @@ This is a module to import and cosimulation of FMUs, developed using FMI standar
 	FMIL: Location where build directory of FMILibrary exists.
 	FMII: Location where FMILibrary is installed. 
 
-input sintax of the module _and_ how to test it?
+#Input Syntax 
+of the module _and_ how to test it?
 
 #Limitations
