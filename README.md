@@ -2,7 +2,7 @@
 This is a module to import and cosimulation of FMUs, developed using FMI standards, for MBDyn.
 
 #Requirement
-1. MBDyn simulation software. (can be downloaded from https://www.mbdyn.org/?Software\_Download)
+1. MBDyn simulation software. (can be downloaded from https://www.mbdyn.org/?Software_Download)
 2. This module is created by using FMILibrary. FMILibrary is a JModellica software  that enables integration of Functional Mock-up Units (FMUs) import in applications. It can be downloaded from http://www.jmodelica.org/FMILibrary
 3. In Makefile.inc from modules/module-FMU/ in mbdyn-VERSION, replace   
 	$FMIL: Location where build directory of FMILibrary exists.  
