@@ -29,6 +29,12 @@ type, cosimulation, <br />
 "u2", node, 1, structural, string, "X[2]", direct, <br />
 output, yes; <br />
 
+#Testing
+To make sure module is working fine,
+1. Look for FMIL Error
+2. MBDyn should terminate successfully
+3. The .out file will have the output states.
+
 #Limitations
-Currnetly the module does not support the string drive
+Currently the module does not support the string drive.
 
