@@ -22,8 +22,3 @@ MODULE_DEPENDENCIES = mbdynFMI.lo \
        mbdynFMI_config.lo\
 
 
-
-
-$(info ******************************************)
-$(info $$MODULE_DEPENDENCIES is [${MODULE_DEPENDENCIES}])
-
