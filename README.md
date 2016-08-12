@@ -11,8 +11,8 @@ This is a module to import and cosimulation of FMUs, developed using FMI standar
 	FMII: Location where FMILibrary is installed. 
 
 #Input Syntax 
-user defined: <label>, FMU, “<location to FMU>”,
-	type, <cosimulation/import>, tolerance, <tolerance value>,
+user defined: \<label\>, FMU, “\<location to FMU\>”,
+	type, \<cosimulation/import\>, tolerance, <tolerance value>,
 	<fmu input variable>, node, <node label>, <node type>, <mbdyn equivalent>,
 	<fmu input variable>, node, <node label>, <node type>, <mbdyn equivalent>,
 	.....
