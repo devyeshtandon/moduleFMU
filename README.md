@@ -36,5 +36,7 @@ To make sure module is working fine,
 3. The .out file will have the output states.
 
 #Limitations
-Currently the module does not support the string drive.
+1. Currently the module does not support the string drive.
+2. The module gives a segmentation fault if FMU with version 1.0 is used with simulation type not supported by the FMU.
+3. Constant timestep for cosimulation. 
 
