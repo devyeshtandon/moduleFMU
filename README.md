@@ -20,10 +20,10 @@ user defined: \<label\>, FMU, “\<location to FMU\>”,
 
 Example Usage:
 user defined: 99, FMU, "/location/to/BouncingBall\_cs.fmu",
-              type, cosimulation,
-              "u", node, 1, structural, string, "X[3]", direct,
-              "u2", node, 1, structural, string, "X[2]", direct,
-              output, yes;
+type, cosimulation,
+"u", node, 1, structural, string, "X[3]", direct,
+"u2", node, 1, structural, string, "X[2]", direct,
+output, yes;
 
 #Limitations
 
