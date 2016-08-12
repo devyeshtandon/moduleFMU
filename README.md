@@ -11,19 +11,19 @@ This is a module to import and cosimulation of FMUs, developed using FMI standar
 	FMII: Location where FMILibrary is installed. 
 
 #Input Syntax 
-user defined: \<label\>, FMU, “\<location to FMU\>”,
-	type, \<cosimulation/import\>, tolerance, \<tolerance value\>,
-	\<fmu input variable\>, node, \<node label\>, \<node type\>, \<mbdyn equivalent\>,
-	\<fmu input variable\>, node, \<node label\>, \<node type\>, \<mbdyn equivalent\>,
-	.....
-	output, yes;
+user defined: \<label\>, FMU, “\<location to FMU\>”, <br />
+	type, \<cosimulation/import\>, tolerance, \<tolerance value\>, <br />
+	\<fmu input variable\>, node, \<node label\>, \<node type\>, \<mbdyn equivalent\>, <br />
+	\<fmu input variable\>, node, \<node label\>, \<node type\>, \<mbdyn equivalent\>, <br />
+	..... <br />
+	output, yes; <br />
 
-Example Usage:
-user defined: 99, FMU, "/location/to/BouncingBall\_cs.fmu",
-type, cosimulation,
-"u", node, 1, structural, string, "X[3]", direct,
-"u2", node, 1, structural, string, "X[2]", direct,
-output, yes;
+Example Usage: <br />
+user defined: 99, FMU, "/location/to/BouncingBall\_cs.fmu", <br />
+type, cosimulation, <br />
+"u", node, 1, structural, string, "X[3]", direct, <br />
+"u2", node, 1, structural, string, "X[2]", direct, <br />
+output, yes; <br />
 
 #Limitations
 
