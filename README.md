@@ -16,8 +16,8 @@ module load: "libmodule-FMU";
 user defined:  <br />
 \<label\>, FMU, “\<location to FMU\>”, <br />
 type, \<cosimulation/import\>, tolerance, \<tolerance value\>, <br />
-\<fmu input variable\>, node, \<node label\>, \<node type\>, \<mbdyn equivalent\>, <br />
-\<fmu input variable\>, node, \<node label\>, \<node type\>, \<mbdyn equivalent\>, <br />
+\<fmu input variable\>, \<drive caller\>, <br />
+\<fmu input variable\>, \<drive caller\>, <br />
 ..... <br />
 output, yes; <br />
 
@@ -30,5 +30,5 @@ type, cosimulation, <br />
 output, yes; <br />
 
 #Limitations
-
+Currnetly the module does not support the string drive
 
