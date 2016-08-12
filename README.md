@@ -9,6 +9,10 @@ This is a module to import and cosimulation of FMUs, developed using FMI standar
 	FMII: Location where FMILibrary is installed.  
 
 #Input Syntax 
+The syntax for using the module is:
+
+module load: "libmodule-FMU";
+
 user defined:  <br />
 \<label\>, FMU, “\<location to FMU\>”, <br />
 type, \<cosimulation/import\>, tolerance, \<tolerance value\>, <br />
@@ -17,7 +21,7 @@ type, \<cosimulation/import\>, tolerance, \<tolerance value\>, <br />
 ..... <br />
 output, yes; <br />
 
-Example Usage: <br />
+*Example Usage:* <br />
 user defined:  <br />
 99, FMU, "/location/to/BouncingBall\_cs.fmu", <br />
 type, cosimulation, <br />
