@@ -1,0 +1,70 @@
+Index: mbdyn/base/privdrive.cc
+===================================================================
+RCS file: /var/cvs/mbdyn/mbdyn/mbdyn-1.0/mbdyn/base/privdrive.cc,v
+retrieving revision 1.21
+retrieving revision 1.22
+diff -u -r1.21 -r1.22
+--- mbdyn/base/privdrive.cc	25 Jun 2015 18:36:36 -0000	1.21
++++ mbdyn/base/privdrive.cc	10 Aug 2016 08:19:45 -0000	1.22
+@@ -99,4 +99,15 @@
+ 
+ 	return DriveOwner::pGetDriveCaller()->Restart(out);
+ }
++
++unsigned int
++PrivDriveCaller::iGetIndex(void) const {
++	return iIndex;
++}
++
++const SimulationEntity *
++PrivDriveCaller::iGetSE(void) const {
++	return pSE;
++}
++
+ 
+Index: mbdyn/base/privdrive.h
+===================================================================
+RCS file: /var/cvs/mbdyn/mbdyn/mbdyn-1.0/mbdyn/base/privdrive.h,v
+retrieving revision 1.19
+retrieving revision 1.20
+diff -u -r1.19 -r1.20
+--- mbdyn/base/privdrive.h	25 Jun 2015 18:36:36 -0000	1.19
++++ mbdyn/base/privdrive.h	10 Aug 2016 08:19:45 -0000	1.20
+@@ -64,6 +64,8 @@
+    
+ 	inline doublereal dGet(const doublereal& dVar) const;
+ 	inline doublereal dGet(void) const;
++	unsigned int iGetIndex(void) const;
++ 	const SimulationEntity* iGetSE(void) const;
+ };
+ 
+ inline doublereal
+Index: mbdyn/base/solver.h
+===================================================================
+RCS file: /var/cvs/mbdyn/mbdyn/mbdyn-1.0/mbdyn/base/solver.h,v
+retrieving revision 1.96
+retrieving revision 1.98
+diff -u -r1.96 -r1.98
+--- mbdyn/base/solver.h	23 Apr 2016 17:01:49 -0000	1.96
++++ mbdyn/base/solver.h	10 Aug 2016 09:50:43 -0000	1.98
+@@ -415,11 +419,19 @@
+ 		return pNLS;
+ 	};
+ 	virtual StepIntegrator *pGetStepIntegrator(void) const {
++		// if (pCurrStepIntegrator == NULL)
++		// 	return pRegularSteps;
++		ASSERT(pCurrStepIntegrator != 0);
++
+ 		return pCurrStepIntegrator;
+ 	};
+-	virtual doublereal GetDInitialTimeStep(void) const {
++	virtual doublereal dGetFinalTime(void) const {
++		return dFinalTime;
++	};
++	virtual doublereal dGetInitialTimeStep(void) const {
+ 		return dInitialTimeStep;
+ 	};
++
+ 	virtual clock_t GetCPUTime(void) const;
+ 
+ 	virtual void PrintResidual(const VectorHandler& Res, integer iIterCnt) const;
