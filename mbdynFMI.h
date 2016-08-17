@@ -34,8 +34,8 @@
 class fmu {
     public:
         enum SimulationTypes{
-                COSIM,
-                IMPORT
+                IMPORT,
+                COSIM
         };	
 
 	int simType; 
@@ -103,7 +103,7 @@ class fmu1 :public fmu{
         fmi1_value_reference_t *vrs;
 
 	fmi1_boolean_t intermediateResults;
-	fmi1_import_variable_list_t* vl;
+
 
     public:
         void parseXML(fmi_import_context_t* context, const char* dirPath);
@@ -153,7 +153,6 @@ class fmu2 : public fmu{
 	fmi2_status_t fmistatus;	
 	jm_status_enu_t jmstatus;
 
-
 	fmi2_real_t currTime;
 	fmi2_real_t relativeTolerance;
 	fmi2_event_info_t eventInfo;
@@ -169,7 +168,7 @@ class fmu2 : public fmu{
         fmi2_value_reference_t *vrs;
 
 	fmi2_boolean_t intermediateResults;
-	fmi2_import_variable_list_t* vl;
+
 
     public:
         void parseXML(fmi_import_context_t* context, const char* dirPath);

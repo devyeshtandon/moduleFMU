@@ -11,7 +11,7 @@
 #include "module-FMU.h"
 #include "solver.h"
 
-//#define DEBUG 
+#define DEBUG 
 
 ModuleFMU::ModuleFMU(
 	unsigned uLabel, const DofOwner *pDO,
@@ -97,7 +97,7 @@ pDM(pDM)
 		model = new fmu2(context, SIMTYPE);
 	}
 
-	silent_cout("Version"<<version);
+	silent_cout("Version "<<version<<"\n");
         model->parseXML(context, UClocation.c_str());
         model->setCallBackFunction();
 	model->ImportCreateDLL();
@@ -105,6 +105,7 @@ pDM(pDM)
 	currTime    = pDM->dGetTime();
 	initialTime = currTime;
 	endTime     = (pDM->GetSolver())->dGetFinalTime();
+
 /// SIMTYPE specific work
 
 	if(SIMTYPE == IMPORT){
@@ -155,8 +156,6 @@ pDM(pDM)
 		seedVector = new double[numOfContinousStates + privDriveLength];
 	}
 
-	jacobian.Resize(numOfContinousStates,numOfContinousStates + privDriveLength);
-	jacobian.Reset();
 }
 
 ModuleFMU::~ModuleFMU(void)
@@ -168,15 +167,13 @@ ModuleFMU::~ModuleFMU(void)
 		delete[] seedVector;
 	}
 
-
 	delete[] jacobianInputVector;
 
 	delete[] currState;
 	delete[] stateDerivatives;
 
 	for (strDriveCon::iterator i = drivesContainer.begin(); i != drivesContainer.end(); i++){
-		delete (i->second);
-		drivesContainer.erase(i->first);
+		delete (i->second);	
 	}
 
 	drivesContainer.clear();
@@ -208,7 +205,7 @@ void
 ModuleFMU::WorkSpaceDim(integer* piNumRows, integer* piNumCols) const
 {
 	*piNumRows = numOfContinousStates;
-	*piNumCols = numOfContinousStates;
+	*piNumCols = numOfContinousStates + privDriveLength;
 }
 
 
@@ -224,10 +221,10 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 #endif
 
 	if (numOfContinousStates > 0){
-		FullSubMatrixHandler& WM = WorkMat.SetFull();
+		FullSubMatrixHandler &WM = WorkMat.SetFull();
+		silent_cout(numOfContinousStates<<"#########"<<privDriveLength<<"*******"<<WM.iVecSize<<"-------------"<<WM.iMaxCols);
 		WM.ResizeReset(numOfContinousStates, numOfContinousStates + privDriveLength);
 		integer iFirstIndex = iGetFirstIndex();
-
 		{
 			int i = 1;
 			for ( i=1; i<=numOfContinousStates ; i++){
@@ -242,6 +239,9 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 		}
 		
 		if (directionalFlag){
+			FullMatrixHandler jacobian;		
+			jacobian.Resize(numOfContinousStates,numOfContinousStates + privDriveLength);
+			jacobian.Reset();
 
 
 			for (int i=0; i<numOfContinousStates; i++){
@@ -315,7 +315,7 @@ ModuleFMU::AssRes(SubVectorHandler& WorkVec,
 		}
 		
 		//Get Index of the elements
-		integer iFirstIndex = iGetFirstIndex() + 1;
+		integer iFirstIndex = iGetFirstIndex();
 
 		//Set Index to WorkVec
 		for (int i=1; i<=numOfContinousStates; i++){
@@ -325,6 +325,7 @@ ModuleFMU::AssRes(SubVectorHandler& WorkVec,
 		//Set WorkVec with the difference in the XPrimCurr - FMUDerivative
 		for (int i=1; i<=numOfContinousStates; i++){
 			WorkVec.PutCoef(i, (stateDerivatives[i-1] - XPrimeCurr(i + iFirstIndex)));
+			silent_cout("OOOOOOOOO"<<(stateDerivatives[i-1] - XPrimeCurr(i + iFirstIndex)));
 		}	
 	}
 
@@ -428,6 +429,7 @@ ModuleFMU::InitialWorkSpaceDim(
 {
 	*piNumRows = 0;
 	*piNumCols = 0;
+
 }
 
 VariableSubMatrixHandler&

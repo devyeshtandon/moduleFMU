@@ -96,10 +96,9 @@ public:
 	DofOrder::Order GetEqType(unsigned int i) const;
 
 	enum SimulationTypes{
-		COSIM,
-		IMPORT
+		IMPORT,
+		COSIM
 	} SIMTYPE;
 
-	FullMatrixHandler jacobian;
 };
 

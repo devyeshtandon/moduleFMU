@@ -116,6 +116,12 @@ void fmu2::setCallBackFunction(){
 
 void fmu2::ImportCreateDLL(){
 
+        if(simType != fmi2_import_get_fmu_kind(fmu)-1){
+                silent_cout("This FMU does not support the specified simulation type");
+                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+        }
+
+
 	if(simType == IMPORT){
 		jmstatus = fmi2_import_create_dllfmu(fmu, fmi2_fmu_kind_me, &callBackFunctions);
 	}
@@ -140,6 +146,7 @@ int fmu2::GetNumOfEventIndicators(void){
 }
 
 int fmu2::GetNumOfVar(void){
+	fmi2_import_variable_list_t* vl;
 	vl = fmi2_import_get_variable_list(fmu, 0);
 	return fmi2_import_get_variable_list_size(vl);
 }
@@ -239,8 +246,11 @@ void fmu2::EventIndicatorInit(void){
 	eventIndicators = new fmi2_real_t [nEventIndicators];
 	eventIndicatorsPrev = new fmi2_real_t [nEventIndicators];
 
-	fmistatus = fmi2_import_get_event_indicators(fmu, eventIndicatorsPrev, nEventIndicators);	
-	STATUSCHECK(fmistatus);
+	fmistatus = fmi2_import_get_event_indicators(fmu, eventIndicatorsPrev, nEventIndicators);
+
+	if(fmistatus){
+		silent_cout("This FMU does triggers events. Warning: Event triggers not supported by MBDyn\n");
+	}	
 }
 
 void fmu2::SetRelativeTol(double dTol){
@@ -290,12 +300,12 @@ double fmu2::GetStateFromRefValue(unsigned int i){
 }
 
 fmu2::~fmu2(void){
-//        delete[] eventIndicators;
-//        delete[] eventIndicatorsPrev;
-
+        
 	fmi_import_free_context(context);
 
 	if (simType == IMPORT ){
+		delete[] eventIndicators;
+	        delete[] eventIndicatorsPrev;
 
 		fmi2_import_free_instance(fmu);
 		fmi2_import_free(fmu);
@@ -314,6 +324,7 @@ fmu2::~fmu2(void){
 void fmu2::GetStateDerivatives(double* derivatives){
     
         fmistatus = fmi2_import_get_derivatives(fmu, derivatives, numOfContStates);
+	silent_cout("PPPPPPPPPPPPPP"<<derivatives[0]);
 	STATUSCHECK(fmistatus);
 
 }
@@ -392,7 +403,7 @@ void fmu2::InitializeAsSlave(const char* location, double tstart, double tend){
 	std::string strLocation = location;
 
 	resourceLocation << "file://" << strLocation;
-	fmi1_boolean_t visible = fmi1_false;
+	fmi2_boolean_t visible = fmi2_false;
 	jmstatus = fmi2_import_instantiate(fmu, "Model for CS", fmi2_cosimulation, resourceLocation.str().c_str(), visible);
 	STATUSCHECK(jmstatus);
 
@@ -413,7 +424,7 @@ void fmu2::InitializeAsSlave(const char* location, double tstart, double tend){
 }
 
 void fmu2::CSPropogate(double tcur, double dt){
-	fmistatus = fmi2_import_do_step(fmu, tcur, dt, fmi1_true);
+	fmistatus = fmi2_import_do_step(fmu, tcur, dt, fmi2_true);
 	STATUSCHECK(fmistatus);
 }
 
@@ -640,6 +651,7 @@ void fmu1::GetDirectionalDerivatives(FullMatrixHandler* jacobian, int* vector, i
 }
 
 int fmu1::GetNumOfVar(){
+	fmi1_import_variable_list_t* vl;
 	vl = fmi1_import_get_variable_list(fmu);
 	return fmi1_import_get_variable_list_size(vl);
 }
@@ -654,8 +666,10 @@ void fmu1::EventIndicatorInit(void){
 	eventIndicators = new fmi1_real_t [nEventIndicators];
         eventIndicatorsPrev = new fmi1_real_t [nEventIndicators];
 
-//	fmistatus = fmi1_import_get_event_indicators(fmu, eventIndicatorsPrev, nEventIndicators);	
-//	STATUSCHECK(fmistatus);
+	fmistatus = fmi1_import_get_event_indicators(fmu, eventIndicatorsPrev, nEventIndicators);	
+	if(fmistatus){	
+		silent_cout("This FMU does triggers events. Warning: Event triggers not supported by MBDyn\n");
+	}
 }
 
 void fmu1::CSPropogate(double tcur, double dt){
@@ -670,8 +684,13 @@ void fmu1::GetStates(double* states){
 	if(!fmistatus){	
 		fmistatus = fmi1_import_get_nominal_continuous_states(fmu, states, numOfContStates);
 	}
-//Put all the values as zero if everything fails?
-	STATUSCHECK(fmistatus);
+	if(!fmistatus){
+		for(int i=0; i<numOfContStates; i++){
+			states[i] = 0;
+		}
+	}
+	
+//	STATUSCHECK(fmistatus);
 	
 }
 
