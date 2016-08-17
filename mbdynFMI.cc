@@ -308,6 +308,7 @@ fmu2::~fmu2(void){
 	        delete[] eventIndicatorsPrev;
 
 		fmi2_import_free_instance(fmu);
+		fmi2_import_destroy_dllfmu(fmu);
 		fmi2_import_free(fmu);
 
 	} else {
@@ -315,6 +316,8 @@ fmu2::~fmu2(void){
 		fmistatus = fmi2_import_terminate(fmu);
 		STATUSCHECK(fmistatus);
 		fmi2_import_free_instance(fmu);
+		fmi2_import_destroy_dllfmu(fmu);
+		fmi2_import_free(fmu);
 
 	}
 
