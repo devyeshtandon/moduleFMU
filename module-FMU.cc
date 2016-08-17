@@ -11,7 +11,7 @@
 #include "module-FMU.h"
 #include "solver.h"
 
-#define DEBUG 
+//#define DEBUG 
 
 ModuleFMU::ModuleFMU(
 	unsigned uLabel, const DofOwner *pDO,
@@ -108,13 +108,18 @@ pDM(pDM)
 
 /// SIMTYPE specific work
 
+	numOfContinousStates = 0;
+
 	if(SIMTYPE == IMPORT){
 
 		double dTol = pDM->GetSolver()->dGetTolerance();
 		model->Initialize(dTol, currTime, relativeTolerance);
 		model->EventIndicatorInit();
-		numOfContinousStates = model->GetNumOfContinousStates();
 		numOfEventIndicators = model->GetNumOfEventIndicators();
+		numOfContinousStates = model->GetNumOfContinousStates();
+		currState           = new double[numOfContinousStates];
+		stateDerivatives    = new double[numOfContinousStates];
+
 
 	} else if (SIMTYPE == COSIM ) {
 
@@ -124,8 +129,6 @@ pDM(pDM)
 
 	}
 
-	currState           = new double[numOfContinousStates];
-	stateDerivatives    = new double[numOfContinousStates];
 	directionalFlag     = model->SupportsDirectionalDerivatives();
 	jacobianInputVector = new int[drivesContainer.size()];
 	privDriveLength = 0;
@@ -135,8 +138,8 @@ pDM(pDM)
 
 		if(!(model->CheckInput(i->first))){
 			silent_cout("Variable "<<i->first<<" is not of type input\n");
+			delete i->second;
 			drivesContainer.erase(i->first);
-
 		} else {
 			if (dynamic_cast<const PrivDriveCaller*>(i->second) != NULL){
 				jacobianInputVector[privDriveLength] = model->GetRefValueFromString((i->first).c_str());
@@ -152,7 +155,7 @@ pDM(pDM)
 		}
 	}
 	
-	if (directionalFlag){
+	if ( directionalFlag){
 		seedVector = new double[numOfContinousStates + privDriveLength];
 	}
 
@@ -163,20 +166,20 @@ ModuleFMU::~ModuleFMU(void)
 	delete model;	
 
 	if(directionalFlag){
-
 		delete[] seedVector;
 	}
 
 	delete[] jacobianInputVector;
 
-	delete[] currState;
-	delete[] stateDerivatives;
-
-	for (strDriveCon::iterator i = drivesContainer.begin(); i != drivesContainer.end(); i++){
-		delete (i->second);	
+	if (SIMTYPE == IMPORT && numOfContinousStates>0){
+		delete[] currState;
+		delete[] stateDerivatives;
 	}
 
-	drivesContainer.clear();
+	for (strDriveCon::iterator i = drivesContainer.begin(); i != drivesContainer.end(); i++){
+		delete (i->second);
+		drivesContainer.erase(i);	
+	}
 }
 
 
@@ -185,9 +188,11 @@ ModuleFMU::Output(OutputHandler& OH) const
 {
 	if (bToBeOutput()) {
 		std::ostream& out = OH.Loadable();
-		for(int i  = 0;  i < numOfContinousStates; ++i){
-			out << std::setw(4) << currState[i] << " ";
-		}
+
+			for(int i  = 0;  i < numOfContinousStates; ++i){
+				out << std::setw(4) << currState[i] << " ";
+			}
+
 		out<<std::endl;
 	}
 }
@@ -204,8 +209,13 @@ ModuleFMU::GetEqType(unsigned int i) const
 void
 ModuleFMU::WorkSpaceDim(integer* piNumRows, integer* piNumCols) const
 {
-	*piNumRows = numOfContinousStates;
-	*piNumCols = numOfContinousStates + privDriveLength;
+	if(SIMTYPE == IMPORT){
+		*piNumRows = numOfContinousStates;
+		*piNumCols = numOfContinousStates + privDriveLength;
+	} else {
+		*piNumCols = 0;
+		*piNumRows = 0;
+	}
 }
 
 
@@ -220,7 +230,7 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 	silent_cout(__func__);
 #endif
 
-	if (numOfContinousStates > 0){
+	if (SIMTYPE == IMPORT && numOfContinousStates > 0){
 		FullSubMatrixHandler &WM = WorkMat.SetFull();
 		silent_cout(numOfContinousStates<<"#########"<<privDriveLength<<"*******"<<WM.iVecSize<<"-------------"<<WM.iMaxCols);
 		WM.ResizeReset(numOfContinousStates, numOfContinousStates + privDriveLength);

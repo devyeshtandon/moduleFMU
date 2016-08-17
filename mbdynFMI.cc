@@ -324,7 +324,7 @@ fmu2::~fmu2(void){
 void fmu2::GetStateDerivatives(double* derivatives){
     
         fmistatus = fmi2_import_get_derivatives(fmu, derivatives, numOfContStates);
-	silent_cout("PPPPPPPPPPPPPP"<<derivatives[0]);
+
 	STATUSCHECK(fmistatus);
 
 }
