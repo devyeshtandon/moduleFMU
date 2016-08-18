@@ -95,10 +95,7 @@ public:
 	DofOrder::Order GetDofType(unsigned int i) const;
 	DofOrder::Order GetEqType(unsigned int i) const;
 
-	enum SimulationTypes{
-		IMPORT,
-		COSIM
-	} SIMTYPE;
+	fmu::SimulationTypes SIMTYPE;
 
 };
 

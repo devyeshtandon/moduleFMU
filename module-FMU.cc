@@ -37,10 +37,10 @@ pDM(pDM)
 	if(HP.IsKeyWord("type")){
 		simType = HP.GetString();
 		if (!strcmp(simType, "cosimulation")){
-			SIMTYPE = COSIM;
+			SIMTYPE = fmu::COSIM;
 		} 
 		else if (!strcmp(simType, "import")){
-			SIMTYPE = IMPORT;
+			SIMTYPE = fmu::IMPORT;
 		}
 		else {
 			silent_cout("Unsupported Simulation Type. "
@@ -69,9 +69,9 @@ pDM(pDM)
 	SetOutputFlag(pDM->fReadOutput(HP, Elem::LOADABLE));
 /* End of reading from input file         */
 
-	if(SIMTYPE == COSIM){
+	if(SIMTYPE == fmu::COSIM){
 		silent_cout("Model defined as co-simulation.\n");
-	} else if ( SIMTYPE == IMPORT ){
+	} else if ( SIMTYPE == fmu::IMPORT ){
 		silent_cout("Model defined as import.\n");
 	}
 
@@ -110,7 +110,7 @@ pDM(pDM)
 
 	numOfContinousStates = 0;
 
-	if(SIMTYPE == IMPORT){
+	if(SIMTYPE == fmu::IMPORT){
 
 		double dTol = pDM->GetSolver()->dGetTolerance();
 		model->Initialize(dTol, currTime, relativeTolerance);
@@ -121,7 +121,7 @@ pDM(pDM)
 		stateDerivatives    = new double[numOfContinousStates];
 
 
-	} else if (SIMTYPE == COSIM ) {
+	} else if (SIMTYPE == fmu::COSIM ) {
 
 		model->InitializeAsSlave(UClocation.c_str(), initialTime, endTime);
 		silent_cout("Initialized as slave\n");
@@ -171,7 +171,7 @@ ModuleFMU::~ModuleFMU(void)
 
 	delete[] jacobianInputVector;
 
-	if (SIMTYPE == IMPORT && numOfContinousStates>0){
+	if (SIMTYPE == fmu::IMPORT && numOfContinousStates>0){
 		delete[] currState;
 		delete[] stateDerivatives;
 	}
@@ -209,7 +209,7 @@ ModuleFMU::GetEqType(unsigned int i) const
 void
 ModuleFMU::WorkSpaceDim(integer* piNumRows, integer* piNumCols) const
 {
-	if(SIMTYPE == IMPORT){
+	if(SIMTYPE == fmu::IMPORT){
 		*piNumRows = numOfContinousStates;
 		*piNumCols = numOfContinousStates + privDriveLength;
 	} else {
@@ -230,7 +230,7 @@ ModuleFMU::AssJac(VariableSubMatrixHandler& WorkMat,
 	silent_cout(__func__);
 #endif
 
-	if (SIMTYPE == IMPORT && numOfContinousStates > 0){
+	if (SIMTYPE == fmu::IMPORT && numOfContinousStates > 0){
 		FullSubMatrixHandler &WM = WorkMat.SetFull();
 		silent_cout(numOfContinousStates<<"#########"<<privDriveLength<<"*******"<<WM.iVecSize<<"-------------"<<WM.iMaxCols);
 		WM.ResizeReset(numOfContinousStates, numOfContinousStates + privDriveLength);
@@ -304,7 +304,7 @@ ModuleFMU::AssRes(SubVectorHandler& WorkVec,
 		model->SetValuesByVariable(i->first, (i->second)->dGet());
 	}
 
-	if(SIMTYPE == IMPORT){
+	if(SIMTYPE == fmu::IMPORT){
 		WorkVec.ResizeReset(numOfContinousStates);
 		if (currTime != pDM->dGetTime()){
 			
@@ -339,7 +339,7 @@ ModuleFMU::AssRes(SubVectorHandler& WorkVec,
 		}	
 	}
 
-	if (SIMTYPE==COSIM){
+	if (SIMTYPE==fmu::COSIM){
 		model->CSPropogate(pDM->dGetTime(), timeStep);
 	}
 	
@@ -391,7 +391,7 @@ ModuleFMU::SetValue(DataManager *pDM,
 	SimulationEntity::Hints *ph)
 {
 	
-	if(SIMTYPE == IMPORT){
+	if(SIMTYPE == fmu::IMPORT){
 		model->GetStates(currState);
 		model->GetStateDerivatives(stateDerivatives);
 		for (int i=0; i<numOfContinousStates; i++){
@@ -411,10 +411,10 @@ ModuleFMU::Restart(std::ostream& out) const
 unsigned int 
 ModuleFMU::iGetNumDof(void) const
 {
-	if (SIMTYPE == IMPORT){
+	if (SIMTYPE == fmu::IMPORT){
 		return numOfContinousStates;
 	}
-	else if (SIMTYPE == COSIM){
+	else if (SIMTYPE == fmu::COSIM){
 		return 0;
 	}
 }
