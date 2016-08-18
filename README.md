@@ -40,3 +40,6 @@ To make sure module is working fine,
 2. The module gives a segmentation fault if FMU with version 1.0 is used with simulation type not supported by the FMU.
 3. Constant timestep for cosimulation. 
 
+#Test Cases:
+All the FMUs which are tested are from:
+https://trac.fmi-standard.org/browser/branches/public/Test_FMUs
