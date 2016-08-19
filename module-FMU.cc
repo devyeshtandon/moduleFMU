@@ -335,7 +335,6 @@ ModuleFMU::AssRes(SubVectorHandler& WorkVec,
 		//Set WorkVec with the difference in the XPrimCurr - FMUDerivative
 		for (int i=1; i<=numOfContinousStates; i++){
 			WorkVec.PutCoef(i, (stateDerivatives[i-1] - XPrimeCurr(i + iFirstIndex)));
-			silent_cout("OOOOOOOOO"<<(stateDerivatives[i-1] - XPrimeCurr(i + iFirstIndex)));
 		}	
 	}
 
